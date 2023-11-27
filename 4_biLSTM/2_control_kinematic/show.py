@@ -76,8 +76,8 @@ for test_seg in range(num_seg):
     if test_seg == 0:
         plt.title("V_y")
 
-plt.suptitle("LSTM-" + tra_name)
-plt.savefig('../../0_files/data_bi/conf-LSTM-' + tra_name)
+plt.suptitle("bi-" + tra_name)
+plt.savefig('../../0_files/data_bi/conf-bi-' + tra_name)
 plt.show()
 
 plt.figure(figsize=(6, 6))
@@ -97,8 +97,8 @@ for test_seg in range(num_seg):
     if test_seg == 0:
         plt.title("a_1")
 
-plt.suptitle("LSTM-" + tra_name)
-plt.savefig('../../0_files/data_bi/act-LSTM-' + tra_name)
+plt.suptitle("bi-" + tra_name)
+plt.savefig('../../0_files/data_bi/act-bi-' + tra_name)
 plt.show()
 
 dataset = np.load("../../0_files/data_pseran.npz")

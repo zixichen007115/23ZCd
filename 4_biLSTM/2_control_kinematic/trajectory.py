@@ -26,7 +26,7 @@ def trajectory_generation(ctrl_step=250, num_seg=4, task='spiral'):
         cos_tar[:, 3] = np.cos(np.linspace(0, np.pi * 2, ctrl_step))
 
     elif task == 'obs':
-        alpha_list = np.array([0.998, 0.998, 0.995, 0.617])
+        alpha_list = np.array([0.998, 0.998, 0.996, 0.600])
 
         alpha_tar[:, 0] = alpha_list[0]
         alpha_tar[:, 1] = alpha_list[1]
@@ -44,7 +44,8 @@ def trajectory_generation(ctrl_step=250, num_seg=4, task='spiral'):
         cos_tar[:, 3] = -np.cos(np.linspace(0, np.pi * 2, ctrl_step))
 
     else:
-        alpha_list = np.array([0.941, 0.998, 0.897, 0.731])
+        alpha_list = np.array([0.941, 0.998, 0.897, 0.650])
+
         fir = int(ctrl_step / 5)
 
         alpha_tar[:fir, 0] = np.linspace(1, alpha_list[0], fir)

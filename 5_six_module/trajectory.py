@@ -8,7 +8,7 @@ def trajectory_generation(ctrl_step=250, num_seg=6, task='spiral'):
     cos_tar = np.zeros((ctrl_step, num_seg))
 
     if task == 'spiral':
-        alpha_list = np.array([0.998, 0.995, 0.920, 0.850, 0.800, 0.650])
+        alpha_list = np.array([0.998, 0.995, 0.950, 0.850, 0.800, 0.650])
 
         alpha_tar[:, 0] = np.linspace(1, alpha_list[0], ctrl_step)
         alpha_tar[:, 1] = np.linspace(1, alpha_list[1], ctrl_step)
@@ -56,7 +56,10 @@ def trajectory_generation(ctrl_step=250, num_seg=6, task='spiral'):
         cos_tar[:, 5] = -np.cos(np.linspace(0, np.pi * 2, ctrl_step))
 
     else:
-        alpha_list = np.array([0.999, 0.996, 0.985, 0.968, 0.904, 0.596])
+        alpha_list = np.array([0.999, 0.996, 0.985, 0.975, 0.925, 0.600])
+        # alpha_list = np.array([0.999, 0.996, 0.985, 0.975, 0.925, 0.600])
+
+
         fir = int(ctrl_step / 5)
 
         alpha_tar[:fir, 0] = np.linspace(1, alpha_list[0], fir)
