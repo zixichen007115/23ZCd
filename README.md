@@ -44,3 +44,18 @@ To generate experimental results figures and gif,
 ## 4_biLSTM, 5_six_module
 
 Share the same principle wit 2_ctrl_large_LSTM
+
+## Citation
+
+We ask that any publications which use this repository cite as following:
+
+```
+@article{chen2024novel,
+  title={A Novel and Accurate BiLSTM Configuration Controller for Modular Soft Robots with Module Number Adaptability},
+  author={Chen, Zixi and Bernabei, Matteo and Mainardi, Vanessa and Ren, Xuyang and Ciuti, Gastone and Stefanini, Cesare},
+  journal={arXiv preprint arXiv:2401.10997},
+  year={2024}
+}
+
+
+```
