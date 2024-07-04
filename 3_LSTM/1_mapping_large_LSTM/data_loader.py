@@ -22,7 +22,7 @@ class Data_sim(data.Dataset):
         act_list = data["act_list"].T
         # pos_list: segment, 3, steps
         # dir_list: segment, 3, 3, steps
-        # act_list: segment*2, steps
+        # act_list: segment*3, steps
 
         print("position  list shape:{}".format(np.shape(pos_list)))
         print("direction list shape:{}".format(np.shape(dir_list)))
@@ -54,8 +54,8 @@ class Data_sim(data.Dataset):
         t_step = 5
 
         for i in range(1, list_length - t_step):
-            seg_input = np.zeros([t_step, 20])
-            output = np.zeros([t_step, 8])
+            seg_input = np.zeros([t_step, num_seg * 5])
+            output = np.zeros([t_step, num_seg * 2])
             for j in range(num_seg):
                 for k in range(t_step):
                     seg_input[k, 0 + j * 5] = vec[i + k + 1, j, 2]

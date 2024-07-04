@@ -4,6 +4,31 @@ from set_arm_environment import ArmEnvironment
 import torch
 
 
+def two2three(act_2d):
+    # act_2d: num_seg * 2;  [-1, 1]
+    # act_3d: (num_seg, 3); [0, 1]
+
+    num_seg = int(len(act_2d) / 2)
+    act_3d = np.zeros((num_seg, 3))
+    for i in range(num_seg):
+        normed_act_2d = act_2d[2 * i:2 * i + 2] / np.linalg.norm(act_2d[2 * i:2 * i + 2])
+        if normed_act_2d[0] > - 0.5 and normed_act_2d[1] > 0:
+            # 0 ~ 2 * pi / 3
+            act_3d[i, 0] = normed_act_2d[0] + normed_act_2d[1] / np.sqrt(3)
+            act_3d[i, 1] = 2 / np.sqrt(3) * normed_act_2d[1]
+
+        elif normed_act_2d[0] > - 0.5 and normed_act_2d[1] <= 0:
+            # 4 * pi / 3  ~ 2 * pi
+            act_3d[i, 0] = normed_act_2d[0] - normed_act_2d[1] / np.sqrt(3)
+            act_3d[i, 2] = -2 / np.sqrt(3) * normed_act_2d[1]
+        else:
+            # 2 * pi / 3  ~ 4 * pi / 3
+            act_3d[i, 1] = (-2 * normed_act_2d[0] + normed_act_2d[1]) / 2
+            act_3d[i, 2] = (-2 * normed_act_2d[0] - normed_act_2d[1]) / 2
+        act_3d[i] *= np.linalg.norm(act_2d[2 * i:2 * i + 2])
+    return act_3d
+
+
 def restore_model(input_size=20, hidden_size=128, num_layers=4, output_size=8):
     from model import LSTM
     LSTM = LSTM(input_size, hidden_size, num_layers, output_size, device=torch.device('cpu'))
@@ -58,6 +83,7 @@ def main(ctrl_step=1, num_seg=4, tar_list=None):
 
     lstm = restore_model()
     seg_input = np.zeros([t_step, 5 * num_seg])
+    # 3 for state, 2 for actuation
 
     act_list = np.zeros((ctrl_step, num_seg, 2))
     pre_act = np.zeros([num_seg, 2])
@@ -102,29 +128,26 @@ def main(ctrl_step=1, num_seg=4, tar_list=None):
                 out = lstm(nn_input_tensor)
                 out = out.cpu().numpy()
             act = out[0, -1, :]
-            act = np.reshape(act, [4, 2])
 
             act_max = 1
-            for i in range(4):
-                for j in range(2):
-                    if np.abs(act[i, j]) > act_max:
-                        act[i, j] = act_max * act[i, j] / np.abs(act[i, j])
+            for i in range(len(act)):
+                if np.abs(act[i]) > act_max:
+                    act[i] = act_max * act[i] / np.abs(act[i])
+            act_3d = two2three(act)
+            act = act.reshape([num_seg, 2])
 
             act_list[ctrl_num, :, :] = act
             pre_act = np.copy(act)
 
             activations[0] = np.concatenate(
-                (np.ones(25) * np.max([0, act[0, 0]]), np.ones(25) * np.max([0, act[1, 0]]),
-                 np.ones(25) * np.max([0, act[2, 0]]), np.ones(25) * np.max([0, act[3, 0]])))
+                (np.ones(25) * act_3d[0, 0], np.ones(25) * act_3d[1, 0], np.ones(25) * act_3d[2, 0],
+                 np.ones(25) * act_3d[3, 0]))
             activations[1] = np.concatenate(
-                (np.ones(25) * np.max([0, act[0, 1]]), np.ones(25) * np.max([0, act[1, 1]]),
-                 np.ones(25) * np.max([0, act[2, 1]]), np.ones(25) * np.max([0, act[3, 1]])))
+                (np.ones(25) * act_3d[0, 1], np.ones(25) * act_3d[1, 1], np.ones(25) * act_3d[2, 1],
+                 np.ones(25) * act_3d[3, 1]))
             activations[2] = np.concatenate(
-                (np.ones(25) * np.max([0, -act[0, 0]]), np.ones(25) * np.max([0, -act[1, 0]]),
-                 np.ones(25) * np.max([0, -act[2, 0]]), np.ones(25) * np.max([0, -act[3, 0]])))
-            activations[3] = np.concatenate(
-                (np.ones(25) * np.max([0, -act[0, 1]]), np.ones(25) * np.max([0, -act[1, 1]]),
-                 np.ones(25) * np.max([0, -act[2, 1]]), np.ones(25) * np.max([0, -act[3, 1]])))
+                (np.ones(25) * act_3d[0, 2], np.ones(25) * act_3d[1, 2], np.ones(25) * act_3d[2, 2],
+                 np.ones(25) * act_3d[3, 2]))
             ctrl_num = ctrl_num + 1
 
         time, systems, done = env.step(time, activations)

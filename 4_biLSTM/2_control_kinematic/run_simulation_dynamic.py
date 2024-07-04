@@ -4,6 +4,31 @@ from set_arm_environment import ArmEnvironment
 import torch
 
 
+def two2three(act_2d):
+    # act_2d: (num_seg, 2);  [-1, 1]
+    # act_3d: (num_seg, 3); [0, 1]
+
+    num_seg = len(act_2d)
+    act_3d = np.zeros((num_seg, 3))
+    for i in range(num_seg):
+        normed_act_2d = act_2d[i] / np.linalg.norm(act_2d[i])
+        if normed_act_2d[0] > - 0.5 and normed_act_2d[1] > 0:
+            # 0 ~ 2 * pi / 3
+            act_3d[i, 0] = normed_act_2d[0] + normed_act_2d[1] / np.sqrt(3)
+            act_3d[i, 1] = 2 / np.sqrt(3) * normed_act_2d[1]
+
+        elif normed_act_2d[0] > - 0.5 and normed_act_2d[1] <= 0:
+            # 4 * pi / 3  ~ 2 * pi
+            act_3d[i, 0] = normed_act_2d[0] - normed_act_2d[1] / np.sqrt(3)
+            act_3d[i, 2] = -2 / np.sqrt(3) * normed_act_2d[1]
+        else:
+            # 2 * pi / 3  ~ 4 * pi / 3
+            act_3d[i, 1] = (-2 * normed_act_2d[0] + normed_act_2d[1]) / 2
+            act_3d[i, 2] = (-2 * normed_act_2d[0] - normed_act_2d[1]) / 2
+        act_3d[i] *= np.linalg.norm(act_2d[i])
+    return act_3d
+
+
 def restore_model(t_step=5, hidden_size=128, num_layers=4, output_size=2):
     from model import LSTM
     input_size = t_step * 5 + 1
@@ -106,26 +131,25 @@ def main(ctrl_step=1, num_seg=4, tar_list=None):
             act = out[0, :, :]
 
             act_max = 1
-            for i in range(4):
+            for i in range(len(act)):
                 for j in range(2):
                     if np.abs(act[i, j]) > act_max:
                         act[i, j] = act_max * act[i, j] / np.abs(act[i, j])
+            act_3d = two2three(act)
 
             act_list[ctrl_num, :, :] = act
             pre_act = np.copy(act)
 
             activations[0] = np.concatenate(
-                (np.ones(25) * np.max([0, act[0, 0]]), np.ones(25) * np.max([0, act[1, 0]]),
-                 np.ones(25) * np.max([0, act[2, 0]]), np.ones(25) * np.max([0, act[3, 0]])))
+                (np.ones(25) * act_3d[0, 0], np.ones(25) * act_3d[1, 0], np.ones(25) * act_3d[2, 0],
+                 np.ones(25) * act_3d[3, 0]))
             activations[1] = np.concatenate(
-                (np.ones(25) * np.max([0, act[0, 1]]), np.ones(25) * np.max([0, act[1, 1]]),
-                 np.ones(25) * np.max([0, act[2, 1]]), np.ones(25) * np.max([0, act[3, 1]])))
+                (np.ones(25) * act_3d[0, 1], np.ones(25) * act_3d[1, 1], np.ones(25) * act_3d[2, 1],
+                 np.ones(25) * act_3d[3, 1]))
             activations[2] = np.concatenate(
-                (np.ones(25) * np.max([0, -act[0, 0]]), np.ones(25) * np.max([0, -act[1, 0]]),
-                 np.ones(25) * np.max([0, -act[2, 0]]), np.ones(25) * np.max([0, -act[3, 0]])))
-            activations[3] = np.concatenate(
-                (np.ones(25) * np.max([0, -act[0, 1]]), np.ones(25) * np.max([0, -act[1, 1]]),
-                 np.ones(25) * np.max([0, -act[2, 1]]), np.ones(25) * np.max([0, -act[3, 1]])))
+                (np.ones(25) * act_3d[0, 2], np.ones(25) * act_3d[1, 2], np.ones(25) * act_3d[2, 2],
+                 np.ones(25) * act_3d[3, 2]))
+
             ctrl_num = ctrl_num + 1
 
         time, systems, done = env.step(time, activations)

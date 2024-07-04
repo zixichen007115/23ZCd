@@ -111,12 +111,12 @@ class ArmEnvironment:
             )
 
             # Add 4 longitudinal muscles
-            for k in range(4):
+            for k in range(3):
                 muscle_groups.append(
                     MuscleGroup(
                         muscles=[
                             LongitudinalMuscle(
-                                muscle_init_angle=np.pi*0.5*k,
+                                muscle_init_angle=np.pi / 3 * 2 * k,
                                 ratio_muscle_position=LM_ratio_muscle_position,
                                 rest_muscle_area=LM_rest_muscle_area,
                                 max_muscle_stress=LM_max_muscle_stress,

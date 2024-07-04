@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import matplotlib.pyplot as plt
 from trajectory import trajectory_generation
@@ -36,16 +38,20 @@ print(np.shape(real_list))
 num_seg = np.shape(pos_list)[0]
 ctrl_step = np.shape(pos_list)[2]
 
+for i in range(num_seg):
+    print(np.min(act_list[:, i]), np.max(act_list[:, i]))
+# sys.exit()
+
 alpha_tar, sin_tar, cos_tar = trajectory_generation(ctrl_step, num_seg, config.task)
 
 err = np.zeros([num_seg, ctrl_step])
 for i in range(num_seg):
     for j in range(ctrl_step):
-        error = np.sqrt(
-            np.square(real_list[i, 0, j] - alpha_tar[j, i]) + np.square(real_list[i, 1, j] - sin_tar[j, i]) + np.square(
-                real_list[i, 2, j] - cos_tar[j, i]))
+        error = np.linalg.norm(real_list[i, :, j] - [alpha_tar[j, i], sin_tar[j, i], cos_tar[j, i]])
         err[i, j] = error
-    print("%.2f" % np.mean(err[i] * 100))
+    if config.task == 'obs':
+        err[i, 0] = 0
+    print("err: %.2f+-%.2f" % (np.mean(err[i] * 100), np.std(err[i] * 100)))
 
 plt.figure(figsize=(9, 6))
 for test_seg in range(num_seg):
@@ -67,6 +73,8 @@ for test_seg in range(num_seg):
     plt.xlim(0, 250)
     if test_seg == 0:
         plt.title("V_x")
+    elif test_seg == num_seg - 1:
+        plt.xlabel('step')
 
     plt.subplot(num_seg, 3, 3 + test_seg * 3)
     plt.plot(cos_tar[:ctrl_step, test_seg], c='red', linewidth=3)
@@ -76,8 +84,8 @@ for test_seg in range(num_seg):
     if test_seg == 0:
         plt.title("V_y")
 
-plt.suptitle("six-" + tra_name)
-plt.savefig('../0_files/data_six/conf-six-' + tra_name)
+plt.suptitle("LSTM-" + tra_name)
+plt.savefig('../0_files/data_six/conf-LSTM-' + tra_name)
 plt.show()
 
 plt.figure(figsize=(6, 6))
@@ -89,6 +97,8 @@ for test_seg in range(num_seg):
     plt.ylabel("m_" + str(test_seg + 1))
     if test_seg == 0:
         plt.title("a_0")
+    elif test_seg == num_seg - 1:
+        plt.xlabel('step')
 
     plt.subplot(num_seg, 2, 2 + test_seg * 2)
     plt.plot(act_list[1, test_seg, :], c='blue')
@@ -96,13 +106,24 @@ for test_seg in range(num_seg):
     plt.xlim(0, 250)
     if test_seg == 0:
         plt.title("a_1")
+    elif test_seg == num_seg - 1:
+        plt.xlabel('step')
 
-plt.suptitle("six-" + tra_name)
-plt.savefig('../0_files/data_six/act-six-' + tra_name)
+plt.suptitle("LSTM-" + tra_name)
+plt.savefig('../0_files/data_six/act-LSTM-' + tra_name)
 plt.show()
+
+dataset = np.load("../0_files/data_pseran.npz")
+pos_list_dataset = dataset["pos_list"]
 
 if config.task == 'obs':
     err = 0
+    plt.figure(figsize=(6, 6))
+    plt.scatter(pos_list_dataset[-1, 0], pos_list_dataset[-1, 1], c='red', s=5)
+    plt.scatter(pos_list[-1, 0], pos_list[-1, 1], c='blue', s=5)
+    plt.xlim(-0.1, 0.1)
+    plt.ylim(-0.1, 0.1)
+    plt.show()
     for i in range(ctrl_step):
         error = np.sqrt(np.square(pos_list[-1, 0, i]) + np.square(pos_list[-1, 1, i]))
         err += error
@@ -110,6 +131,12 @@ if config.task == 'obs':
 
 elif config.task == 'straight':
     err = 0
+    plt.figure(figsize=(6, 6))
+    plt.scatter(pos_list_dataset[-1, 0], pos_list_dataset[-1, 1], c='red', s=5)
+    plt.plot(pos_list[-1, 0], pos_list[-1, 1], c='blue')
+    plt.xlim(-0.1, 0.1)
+    plt.ylim(-0.1, 0.1)
+    plt.show()
     ori_vec = np.zeros([3, 1])
     ori_vec[2] = 1
     for i in range(ctrl_step):

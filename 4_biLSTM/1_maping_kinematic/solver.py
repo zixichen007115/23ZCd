@@ -1,3 +1,5 @@
+import sys
+
 from model import LSTM
 import torch
 import torch.nn.functional as F
@@ -43,7 +45,7 @@ class Solver(object):
         self.model_save_step = config.model_save_step
 
         # Early stop 
-        self.patience = 10
+        self.patience = 5
         self.verbose = False
         self.counter = 0
         self.best_score = None
@@ -95,9 +97,10 @@ class Solver(object):
         elif score < self.best_score + self.delta:
             self.counter += 1
             print('EarlyStopping counter: %d out of %d, best score:%.3f, current score:%.3f' % (
-            self.counter, self.patience, self.best_score, score))
+                self.counter, self.patience, self.best_score, score))
             if self.counter >= self.patience:
                 self.early_stop = True
+
         else:
             self.counter = 0
             if score > self.best_score:
@@ -150,6 +153,8 @@ class Solver(object):
 
             # Compute loss with real images.
             est_output = self.LSTM(seg_input)
+            # print(est_output.shape)
+
             loss_t = self.training_loss(est_output, output)
 
             # Backward and optimize.
@@ -195,10 +200,6 @@ class Solver(object):
             if self.early_stop:
                 break
 
-            # Save model checkpoints.
-            if (i + 1) % self.model_save_step == 0:
-                self.save_checkpoint()
-
     def test(self):
 
         # Load the trained classifier.
@@ -221,6 +222,8 @@ class Solver(object):
                     num += 1
                 print(est_output[0])
                 print(output[0])
+                print("-----")
 
             for i in range(self.num_seg):
-                print("%d th module, err:%.2f" % (i + 1, np.mean(err[:, i] / 2 * 100)))
+                print("%d th module, err:%.2f" % (i + 1, np.mean(err[:, i] * 100 / 2)))
+                print("%d th module, var:%.2f" % (i + 1, np.std(err[:, i] * 100 / 2)))

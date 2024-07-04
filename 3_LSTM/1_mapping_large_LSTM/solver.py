@@ -42,7 +42,7 @@ class Solver(object):
         self.model_save_step = config.model_save_step
 
         # Early stop 
-        self.patience = 10
+        self.patience = 5
         self.verbose = False
         self.counter = 0
         self.best_score = None
@@ -194,10 +194,6 @@ class Solver(object):
             if self.early_stop:
                 break
 
-            # Save model checkpoints.
-            if (i + 1) % self.model_save_step == 0:
-                self.save_checkpoint()
-
     def test(self):
 
         # Load the trained classifier.
@@ -223,4 +219,5 @@ class Solver(object):
                 print(act_est[0, -1])
 
             for i in range(4):
-                print("err_%d:%.2f" % (i + 1, np.mean(err_act[:, -1, 2*i:2*i+2]) * 100 / 2))
+                print("err_%d:%.2f" % (i + 1, np.mean(err_act[:, -1, 2 * i:2 * i + 2] * 100 / 2)))
+                print("var_%d:%.2f" % (i + 1, np.std(err_act[:, -1, 2 * i:2 * i + 2] * 100 / 2)))

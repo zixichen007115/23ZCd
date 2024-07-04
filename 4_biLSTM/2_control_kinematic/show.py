@@ -41,11 +41,11 @@ alpha_tar, sin_tar, cos_tar = trajectory_generation(ctrl_step, num_seg, config.t
 err = np.zeros([num_seg, ctrl_step])
 for i in range(num_seg):
     for j in range(ctrl_step):
-        error = np.sqrt(
-            np.square(real_list[i, 0, j] - alpha_tar[j, i]) + np.square(real_list[i, 1, j] - sin_tar[j, i]) + np.square(
-                real_list[i, 2, j] - cos_tar[j, i]))
+        error = np.linalg.norm(real_list[i, :, j] - [alpha_tar[j, i], sin_tar[j, i], cos_tar[j, i]])
         err[i, j] = error
-    print("%.2f" % np.mean(err[i] * 100))
+    if config.task == 'obs':
+        err[i, 0] = 0
+    print("err: %.2f+-%.2f" % (np.mean(err[i] * 100), np.std(err[i] * 100)))
 
 plt.figure(figsize=(9, 6))
 for test_seg in range(num_seg):
@@ -67,6 +67,8 @@ for test_seg in range(num_seg):
     plt.xlim(0, 250)
     if test_seg == 0:
         plt.title("V_x")
+    elif test_seg == num_seg - 1:
+        plt.xlabel('step')
 
     plt.subplot(num_seg, 3, 3 + test_seg * 3)
     plt.plot(cos_tar[:ctrl_step, test_seg], c='red', linewidth=3)
@@ -76,8 +78,8 @@ for test_seg in range(num_seg):
     if test_seg == 0:
         plt.title("V_y")
 
-plt.suptitle("bi-" + tra_name)
-plt.savefig('../../0_files/data_bi/conf-bi-' + tra_name)
+plt.suptitle("LSTM-" + tra_name)
+plt.savefig('../../0_files/data_bi/conf-LSTM-' + tra_name)
 plt.show()
 
 plt.figure(figsize=(6, 6))
@@ -89,6 +91,8 @@ for test_seg in range(num_seg):
     plt.ylabel("m_" + str(test_seg + 1))
     if test_seg == 0:
         plt.title("a_0")
+    elif test_seg == num_seg - 1:
+        plt.xlabel('step')
 
     plt.subplot(num_seg, 2, 2 + test_seg * 2)
     plt.plot(act_list[1, test_seg, :], c='blue')
@@ -96,13 +100,17 @@ for test_seg in range(num_seg):
     plt.xlim(0, 250)
     if test_seg == 0:
         plt.title("a_1")
+    elif test_seg == num_seg - 1:
+        plt.xlabel('step')
 
-plt.suptitle("bi-" + tra_name)
-plt.savefig('../../0_files/data_bi/act-bi-' + tra_name)
+
+plt.suptitle("LSTM-" + tra_name)
+plt.savefig('../../0_files/data_bi/act-LSTM-' + tra_name)
 plt.show()
 
 dataset = np.load("../../0_files/data_pseran.npz")
 pos_list_dataset = dataset["pos_list"]
+
 if config.task == 'obs':
     err = 0
     plt.figure(figsize=(6, 6))

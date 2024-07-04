@@ -1,3 +1,5 @@
+import sys
+
 from torch.utils import data
 import random
 import numpy as np
@@ -23,7 +25,7 @@ class Data_sim(data.Dataset):
         act_list = data["act_list"].T
         # pos_list: segment, 3, steps
         # dir_list: segment, 3, 3, steps
-        # act_list: segment*2, steps
+        # act_list: segment * 3, steps
 
         print("position  list shape:{}".format(np.shape(pos_list)))
         print("direction list shape:{}".format(np.shape(dir_list)))
@@ -56,7 +58,7 @@ class Data_sim(data.Dataset):
 
         for i in range(1, list_length - t_step):
             seg_input = np.zeros([num_seg, 5 * t_step + 1])
-            # 2 for actuation, 3 for previous state
+            # 3 for actuation, 3 for previous state
             output = np.zeros([num_seg, 2])
             for j in range(num_seg):
                 for k in range(t_step):
@@ -64,6 +66,7 @@ class Data_sim(data.Dataset):
                     seg_input[j, 1 + k * 5] = vec[i + k + 1, j, 0]
                     seg_input[j, 2 + k * 5] = vec[i + k + 1, j, 1]
                     seg_input[j, 3 + k * 5:5 + k * 5] = act_list[2 * j:2 * j + 2, i + k - 1]
+                    # print(seg_input[j, 0 + k * 6:6 + k * 6])
                 seg_input[j, -1] = 1 - 2 / (num_seg - 1) * j
                 output[j] = act_list[2 * j:2 * j + 2, i + t_step - 1]
 
