@@ -38,3 +38,6 @@ for i in range(num_seg):
 plt.legend()
 plt.savefig('../0_files/dataset_' + config.data_kind)
 plt.show()
+
+print(np.max(pos_list[-1, 0]) - np.min(pos_list[-1, 0]))
+print(np.max(pos_list[-1, 1]) - np.min(pos_list[-1, 1]))

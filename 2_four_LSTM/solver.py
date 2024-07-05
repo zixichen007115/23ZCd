@@ -219,5 +219,5 @@ class Solver(object):
                 print(act[0, -1])
                 print(act_est[0, -1])
 
-            print("err:%.2f" % (np.mean(err_act) * 100 / 2))
-            print("err:%.2f" % (np.std(err_act) * 100 / 2))
+            print("err:%.2f" % (np.mean(err_act * 100 / 2)))
+            print("err:%.2f" % (np.std(err_act * 100 / 2)))
